@@ -1,0 +1,105 @@
+org: antoniocot
+service: api-solicitud-prestamo
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  memorySize: 1024
+  timeout: 30
+  iam:
+    role: arn:aws:iam::316129865556:role/LabRole
+  environment:
+    SOLICITUD_PRESTAMO_TABLE: TABLA-SOLICITUD-PRESTAMO
+
+functions:
+  crearSolicitudPrestamo:
+    handler: crearSolicitudPrestamo.lambdaHandler
+    events:
+      - http:
+          path: /solicitud-prestamo/crear
+          method: post
+          cors: true
+          integration: lambda
+
+  listarSolicitudesPrestamo:
+    handler: listarSolicitudesPrestamo.lambdaHandler
+    events:
+      - http:
+          path: /solicitud-prestamo/listar
+          method: post
+          cors: true
+          integration: lambda
+
+  aceptarSolicitudPrestamo:
+    handler: aceptarSolicitudPrestamo.lambdaHandler
+    events:
+      - http:
+          path: /solicitud-prestamo/aceptar
+          method: post
+          cors: true
+          integration: lambda
+
+  rechazarSolicitudPrestamo:
+    handler: rechazarSolicitudPrestamo.lambdaHandler
+    events:
+      - http:
+          path: /solicitud-prestamo/rechazar
+          method: post
+          cors: true
+          integration: lambda
+
+  obtenerSolicitudPrestamo:
+    handler: obtenerSolicitudPrestamo.lambdaHandler
+    events:
+      - http:
+          path: /solicitud-prestamo/obtener
+          method: post
+          cors: true
+          integration: lambda
+
+  listarPorEstado:
+    handler: filtrarPorEstado.lambdaHandler
+    events:
+      - http:
+          path: /solicitud-prestamo/listar-estado
+          method: post
+          cors: true
+          integration: lambda
+
+  eliminarSolicitudPrestamo:
+    handler: eliminarSolicitudPrestamo.lambdaHandler
+    events:
+      - http:
+          path: /solicitud-prestamo/eliminar
+          method: delete
+          cors: true
+          integration: lambda
+
+resources:
+  Resources:
+    SolicitudPrestamoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.SOLICITUD_PRESTAMO_TABLE}
+        AttributeDefinitions:
+          - AttributeName: usuario_id
+            AttributeType: S
+          - AttributeName: solicitud_id
+            AttributeType: S
+          - AttributeName: estado
+            AttributeType: S
+        KeySchema:
+          - AttributeName: usuario_id
+            KeyType: HASH
+          - AttributeName: solicitud_id
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - IndexName: EstadoIndex
+            KeySchema:
+              - AttributeName: estado
+                KeyType: HASH
+              - AttributeName: solicitud_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
